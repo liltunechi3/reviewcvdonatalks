@@ -1,6 +1,6 @@
-# System Prompt — Claude CV Reviewer
+# System Prompt — CV Reviewer AI
 
-Dokumen ini adalah instruksi (system prompt) yang dikirim ke Claude setiap kali user meminta review CV. Prompt ini bergantung pada data yang dikumpulkan lewat form di `docs/input-form.md`.
+Dokumen ini adalah instruksi (system prompt) yang dikirim ke model AI (Google Gemini) setiap kali user meminta review CV. Prompt ini bergantung pada data yang dikumpulkan lewat form di `docs/input-form.md`.
 
 ---
 
@@ -128,13 +128,13 @@ Upload CV PDF
       ↓
 Isi target role
       ↓
-Claude membaca isi CV
+AI membaca isi CV
       ↓
-Claude menyesuaikan review dengan role tujuan
+AI menyesuaikan review dengan role tujuan
       ↓
 Hasil review jadi lebih spesifik
       ↓
 User download PDF hasil review
 ```
 
-Prompt ini memastikan setiap output Claude bukan sekadar "review CV umum", melainkan **review CV berdasarkan tujuan karier user**, sesuai role, industri, dan level karier yang mereka input di form (`docs/input-form.md`).
+Prompt ini memastikan setiap output AI bukan sekadar "review CV umum", melainkan **review CV berdasarkan tujuan karier user**, sesuai role, industri, dan level karier yang mereka input di form (`docs/input-form.md`).

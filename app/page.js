@@ -134,7 +134,7 @@ export default function HomePage() {
     <main className="container">
       <h1>Review CV — Dona Talks</h1>
       <p className="subtitle">
-        Upload CV kamu dan isi target karier, Claude akan mereview CV-mu supaya lebih cocok dengan role,
+        Upload CV kamu dan isi target karier, AI akan mereview CV-mu supaya lebih cocok dengan role,
         industri, dan level karier yang kamu tuju — bukan review generik.
       </p>
 

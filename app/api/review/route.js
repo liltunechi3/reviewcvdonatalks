@@ -1,11 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { extractPdfText } from "../../../lib/extractPdfText";
 import { buildUserMessage, getSystemPrompt } from "../../../lib/systemPrompt";
 
 // pdf-parse & fs perlu Node.js runtime, bukan Edge.
 export const runtime = "nodejs";
 
-const DEFAULT_MODEL = "claude-sonnet-5";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 export async function POST(req) {
   let formData;
@@ -52,44 +52,40 @@ export async function POST(req) {
     );
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return Response.json({ error: "ANTHROPIC_API_KEY belum dikonfigurasi di server." }, { status: 500 });
+    return Response.json({ error: "GEMINI_API_KEY belum dikonfigurasi di server." }, { status: 500 });
   }
 
   try {
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model: process.env.CLAUDE_MODEL || DEFAULT_MODEL,
-      max_tokens: 4096,
-      system: getSystemPrompt(),
-      messages: [
-        {
-          role: "user",
-          content: buildUserMessage({
-            namaLengkap,
-            roleDiinginkan,
-            roleSpecified,
-            industriDituju,
-            levelKarier,
-            bahasaCv,
-            cvText,
-          }),
-        },
-      ],
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
+      contents: buildUserMessage({
+        namaLengkap,
+        roleDiinginkan,
+        roleSpecified,
+        industriDituju,
+        levelKarier,
+        bahasaCv,
+        cvText,
+      }),
+      config: {
+        systemInstruction: getSystemPrompt(),
+      },
     });
 
-    const review = message.content
-      .filter((block) => block.type === "text")
-      .map((block) => block.text)
-      .join("\n\n");
+    const review = (response.text || "").trim();
+    if (!review) {
+      return Response.json({ error: "Model tidak mengembalikan hasil review. Coba lagi." }, { status: 502 });
+    }
 
     return Response.json({
       review,
       meta: { namaLengkap, roleDiinginkan, roleSpecified, industriDituju, levelKarier, bahasaCv },
     });
   } catch (err) {
-    console.error("Gagal memanggil Claude API:", err);
-    return Response.json({ error: "Gagal memproses review lewat Claude API. Coba lagi sebentar lagi." }, { status: 502 });
+    console.error("Gagal memanggil Gemini API:", err);
+    return Response.json({ error: "Gagal memproses review lewat Gemini API. Coba lagi sebentar lagi." }, { status: 502 });
   }
 }
