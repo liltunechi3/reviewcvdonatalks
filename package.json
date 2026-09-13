@@ -1,0 +1,20 @@
+{
+  "name": "reviewcvdonatalks",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "next": "^14.2.35",
+    "pdf-parse": "^2.4.5",
+    "pdfkit": "^0.20.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0"
+  }
+}
