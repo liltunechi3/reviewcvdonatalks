@@ -22,7 +22,7 @@ Selain upload PDF CV, form **wajib** meminta user mengisi field berikut sebelum 
 
 ### Validasi
 
-- Form tidak bisa disubmit jika salah satu dari 5 field di atas kosong, kecuali user secara eksplisit memilih opsi "Skip / Role belum pasti" pada field **Role yang Diinginkan** — dalam kasus ini proses tetap lanjut, tapi backend menandai `role_specified: false` agar AI menampilkan catatan bahwa revisi masih bersifat umum (lihat `docs/system-prompt.md`).
+- Form tidak bisa disubmit jika salah satu dari 5 field di atas kosong, kecuali user secara eksplisit memilih opsi "Skip / Role belum pasti" pada field **Role yang Diinginkan** — dalam kasus ini proses tetap lanjut, tapi backend menandai `role_specified: false` agar tools menampilkan catatan bahwa revisi masih bersifat umum (lihat `docs/review-rules.md`).
 - Field **Role yang Diinginkan** dan **Industri yang Dituju** sebaiknya berupa combobox (select + custom text) supaya konsisten tapi tetap fleksibel untuk role/industri yang tidak ada di daftar contoh.
 
 ## 3. Alur Aplikasi
@@ -32,9 +32,9 @@ Upload CV PDF
       ↓
 Isi target role (Nama, Role, Industri, Level Karier, Bahasa CV)
       ↓
-AI membaca isi CV
+Tools mengekstrak & menganalisis isi CV
       ↓
-AI menyesuaikan review dengan role tujuan
+Tools menyesuaikan review dengan role tujuan
       ↓
 Hasil review jadi lebih spesifik
       ↓
@@ -43,7 +43,7 @@ User download PDF hasil review
 
 ## 4. Payload ke Backend / Prompt
 
-Field-field ini dikirim bersama teks CV yang sudah diekstrak sebagai konteks untuk AI (lihat `docs/system-prompt.md`, bagian "Input yang Diterima"):
+Field-field ini dikirim bersama teks CV yang sudah diekstrak sebagai input untuk mesin analisis rule-based (lihat `docs/review-rules.md`, bagian "Input yang Dipakai"):
 
 ```json
 {

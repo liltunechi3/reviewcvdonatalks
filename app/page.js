@@ -134,8 +134,9 @@ export default function HomePage() {
     <main className="container">
       <h1>Review CV — Dona Talks</h1>
       <p className="subtitle">
-        Upload CV kamu dan isi target karier, AI akan mereview CV-mu supaya lebih cocok dengan role,
-        industri, dan level karier yang kamu tuju — bukan review generik.
+        Upload CV kamu dan isi target karier, tools ini akan menganalisis CV-mu (100% rule-based, tanpa
+        AI) supaya lebih cocok dengan role, industri, dan level karier yang kamu tuju — bukan review
+        generik.
       </p>
 
       <form onSubmit={handleSubmit} className="form">

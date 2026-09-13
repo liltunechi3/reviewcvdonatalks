@@ -1,11 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import { analyzeCv } from "../../../lib/cvAnalyzer";
 import { extractPdfText } from "../../../lib/extractPdfText";
-import { buildUserMessage, getSystemPrompt } from "../../../lib/systemPrompt";
 
 // pdf-parse & fs perlu Node.js runtime, bukan Edge.
 export const runtime = "nodejs";
-
-const DEFAULT_MODEL = "gemini-2.5-flash";
 
 export async function POST(req) {
   let formData;
@@ -52,40 +49,19 @@ export async function POST(req) {
     );
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return Response.json({ error: "GEMINI_API_KEY belum dikonfigurasi di server." }, { status: 500 });
-  }
+  // Analisis 100% rule-based, dijalankan lokal — tidak ada panggilan API/AI eksternal.
+  const review = analyzeCv({
+    namaLengkap,
+    roleDiinginkan,
+    roleSpecified,
+    industriDituju,
+    levelKarier,
+    bahasaCv,
+    cvText,
+  });
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const response = await ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
-      contents: buildUserMessage({
-        namaLengkap,
-        roleDiinginkan,
-        roleSpecified,
-        industriDituju,
-        levelKarier,
-        bahasaCv,
-        cvText,
-      }),
-      config: {
-        systemInstruction: getSystemPrompt(),
-      },
-    });
-
-    const review = (response.text || "").trim();
-    if (!review) {
-      return Response.json({ error: "Model tidak mengembalikan hasil review. Coba lagi." }, { status: 502 });
-    }
-
-    return Response.json({
-      review,
-      meta: { namaLengkap, roleDiinginkan, roleSpecified, industriDituju, levelKarier, bahasaCv },
-    });
-  } catch (err) {
-    console.error("Gagal memanggil Gemini API:", err);
-    return Response.json({ error: "Gagal memproses review lewat Gemini API. Coba lagi sebentar lagi." }, { status: 502 });
-  }
+  return Response.json({
+    review,
+    meta: { namaLengkap, roleDiinginkan, roleSpecified, industriDituju, levelKarier, bahasaCv },
+  });
 }

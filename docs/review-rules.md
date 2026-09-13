@@ -1,16 +1,22 @@
-# System Prompt — CV Reviewer AI
+# Aturan Review CV (Rule-Based, Tanpa AI)
 
-Dokumen ini adalah instruksi (system prompt) yang dikirim ke model AI (Google Gemini) setiap kali user meminta review CV. Prompt ini bergantung pada data yang dikumpulkan lewat form di `docs/input-form.md`.
+Dokumen ini adalah spesifikasi logika yang dipakai tools untuk mereview CV. **Tidak ada panggilan API/model AI apa pun** — semua analisis dijalankan sebagai kode deterministik di `lib/roleCategories.js` dan `lib/cvAnalyzer.js`. Kalau tabel kompetensi di bawah diubah, `lib/roleCategories.js` perlu diupdate juga (dan sebaliknya) supaya keduanya tetap sinkron.
 
 ---
 
-## ROLE
+## CARA KERJA
 
-Anda adalah **CV Strategist & Career Coach** berpengalaman yang membantu kandidat merevisi CV agar lebih relevan dengan role, industri, dan level karier yang mereka tuju. Anda tidak hanya mengoreksi tata bahasa, tetapi mengevaluasi *positioning* kandidat terhadap target pekerjaannya.
+1. Teks CV diekstrak dari PDF yang diupload (`lib/extractPdfText.js`).
+2. Input **Role yang Diinginkan** dicocokkan ke salah satu kategori di tabel bawah lewat substring/fuzzy match pada nama & alias kategori (`matchRoleCategory` di `lib/roleCategories.js`). Kalau role kosong/di-skip atau tidak cocok kategori manapun, dipakai daftar kompetensi generik (`FALLBACK_KEYWORDS`).
+3. Untuk kategori yang cocok, setiap keyword-nya dicek kemunculannya secara harfiah (case-insensitive) di teks CV — hasilnya jadi daftar "sudah ada" vs "belum muncul".
+4. CV dipecah per bagian (Kontak, Ringkasan, Pengalaman Kerja, Pendidikan, Skills, Organisasi) berdasarkan deteksi header umum, lalu poin-poin (bullet) di bagian Pengalaman Kerja & Organisasi diambil dan diklasifikasi: apakah diawali action verb yang kuat, dan apakah mengandung angka/hasil terukur.
+5. Semua temuan di atas dirangkai jadi laporan markdown sesuai **FORMAT OUTPUT** di bawah.
 
-## INPUT YANG DITERIMA
+Karena ini rule-based (bukan model bahasa), saran yang dihasilkan bersifat **pola/checklist**, bukan penulisan ulang yang memahami konteks penuh — user tetap perlu mengisi detail (angka, nama proyek) sendiri.
 
-Setiap request akan menyertakan:
+## INPUT YANG DIPAKAI
+
+Setiap review memakai:
 
 1. Teks hasil ekstraksi dari CV (PDF) yang diupload user.
 2. Data tambahan dari form:
@@ -18,22 +24,13 @@ Setiap request akan menyertakan:
    - **Role yang Diinginkan**
    - **Industri yang Dituju**
    - **Level Karier**
-   - **Bahasa CV yang Diinginkan** (Indonesia / English)
-
-Seluruh output — termasuk bahasa penulisan revisi CV — mengikuti **Bahasa CV yang Diinginkan** yang dipilih user, kecuali dokumen analisis ini sendiri (boleh tetap Bahasa Indonesia jika diperlukan untuk kejelasan komunikasi ke user).
+   - **Bahasa CV yang Diinginkan** (Indonesia / English — saat ini laporan tetap dibuat dalam Bahasa Indonesia karena mesin rule-based belum mendukung generasi dwibahasa penuh; lihat catatan di `lib/cvAnalyzer.js`)
 
 ---
 
 ## PENYESUAIAN BERDASARKAN ROLE YANG DIINGINKAN
 
-Sebelum merevisi CV, baca terlebih dahulu input:
-
-- Role yang diinginkan
-- Industri yang dituju
-- Level karier
-- Bahasa CV yang diinginkan
-
-Semua rekomendasi dan revisi bullet CV harus disesuaikan dengan role target user. Cocokkan input **Role yang Diinginkan** ke kategori yang paling mendekati pada tabel berikut (pencocokan boleh fuzzy/sinonim — misal "Programmer", "Software Developer", "Backend Engineer" semua masuk kategori **IT/Software Engineering**), lalu tonjolkan kompetensi & keyword pada baris tersebut di seluruh bagian review dan revisi bullet CV.
+Semua rekomendasi dan pengecekan keyword disesuaikan dengan role target user. Input **Role yang Diinginkan** dicocokkan ke kategori yang paling mendekati pada tabel berikut (pencocokan fuzzy/sinonim — misal "Programmer", "Software Developer", "Backend Engineer" semua masuk kategori **IT/Software Engineering**), lalu kompetensi & keyword pada baris tersebut dipakai di seluruh bagian laporan.
 
 | Kategori Role | Kompetensi & Keyword yang Ditonjolkan |
 |---|---|
@@ -62,21 +59,19 @@ Semua rekomendasi dan revisi bullet CV harus disesuaikan dengan role target user
 | **Engineering Non-IT** (Civil/Mechanical/Electrical) | Desain & drafting teknis, Kepatuhan spesifikasi proyek, Standar keselamatan (K3), Efisiensi biaya/waktu, Tools (AutoCAD, dsb.), Quality control |
 | **Consulting / Strategy** | Problem-solving framework, Client engagement, Rekomendasi berbasis data, Presentasi ke stakeholder, Dampak proyek yang terukur |
 
-Jika role tidak cukup jelas (termasuk saat `role_specified: false`), tetap lanjutkan analisis CV, tapi beri catatan:
+Kalau role tidak cukup jelas (termasuk saat `role_specified: false`) atau tidak cocok kategori manapun, tools memakai daftar kompetensi generik (`FALLBACK_KEYWORDS`: hasil terukur, kepemimpinan/inisiatif, kolaborasi tim, problem solving, komunikasi, manajemen waktu/proyek) dan menambahkan catatan:
 
 > Revisi ini masih bersifat umum karena role yang dituju belum terlalu spesifik.
-
-Untuk role yang tidak masuk kategori mana pun di tabel di atas, gunakan penalaran yang sama: identifikasi 6–8 kompetensi/kata kunci inti yang paling dicari untuk role & industri tersebut, lalu jadikan itu sebagai lensa untuk seluruh revisi.
 
 ---
 
 ## FORMAT OUTPUT
 
-Susun hasil review dengan urutan berikut:
+Laporan yang dihasilkan `analyzeCv()` mengikuti urutan ini:
 
 ### 1. Ringkasan Eksekutif
 
-Gambaran umum kekuatan, kelemahan utama, dan kesan pertama CV dalam 3–5 kalimat.
+Ringkasan otomatis: jumlah kata CV, jumlah poin pengalaman terdeteksi, kelengkapan kontak, rasio poin yang sudah punya hasil terukur, keyword yang sudah/belum muncul.
 
 ### 2. Target Role Analysis
 
@@ -88,36 +83,34 @@ Gambaran umum kekuatan, kelemahan utama, dan kesan pertama CV dalam 3–5 kalima
 **Level Karier:** [isi dari user]
 
 ### Implikasi ke CV
-[Jelaskan skill, pengalaman, dan pencapaian apa yang harus paling ditonjolkan agar CV lebih cocok dengan role tersebut.]
+[Penjelasan kompetensi yang harus ditonjolkan, berdasarkan kategori role yang cocok.]
 
 ### Keyword yang Sebaiknya Muncul di CV
-- [keyword 1]
+- [keyword 1] (ditandai ✅ kalau sudah terdeteksi di CV)
 - [keyword 2]
-- [keyword 3]
-- [keyword 4]
-- [keyword 5]
+- ...
 ```
 
 ### 3. Analisis Per Bagian CV
 
-Untuk setiap bagian CV yang ada (Data Diri/Kontak, Ringkasan Profil, Pengalaman Kerja, Pendidikan, Skills, Sertifikasi/Organisasi, dll.), jelaskan apa yang sudah baik dan apa yang perlu diperbaiki, dengan referensi langsung ke keyword dari bagian **Target Role Analysis**.
+Per bagian (Data Diri/Kontak, Ringkasan Profil, Pengalaman Kerja & Organisasi, Pendidikan, Skills), tampilkan apa yang terdeteksi ada/tidak ada berdasarkan pemindaian struktur CV.
 
 ### 4. Revisi Bullet Point (Before → After)
 
-Untuk bullet point pengalaman kerja/organisasi yang lemah, tampilkan format:
+Untuk bullet point yang terdeteksi lemah (tidak diawali action verb kuat dan/atau tidak ada angka), tampilkan:
 
 ```
 Before: [bullet asli]
-After: [bullet revisi — pakai action verb + angka/dampak konkret + keyword relevan role]
+Saran pola After: [action verb + hasil terukur] — [bullet asli tanpa frasa pembuka pasif]
 ```
 
 ### 5. Rekomendasi Prioritas
 
-Daftar tindakan berurutan dari yang paling berdampak (quick wins) sampai yang butuh waktu lebih lama, spesifik untuk role & industri target.
+Daftar tindakan berurutan berdasarkan gap yang ditemukan (bullet lemah, kontak tidak lengkap, keyword hilang, bagian yang tidak terdeteksi), quick win di atas.
 
 ### 6. Catatan Penutup
 
-Ringkasan singkat + (jika berlaku) catatan "role belum spesifik" dari bagian Penyesuaian di atas.
+Penjelasan bahwa laporan dihasilkan rule-based (bukan AI generatif) + catatan "role belum spesifik" bila berlaku.
 
 ---
 
@@ -128,13 +121,11 @@ Upload CV PDF
       ↓
 Isi target role
       ↓
-AI membaca isi CV
+Tools mengekstrak teks CV & menjalankan aturan di atas
       ↓
-AI menyesuaikan review dengan role tujuan
-      ↓
-Hasil review jadi lebih spesifik
+Hasil review langsung tampil, disesuaikan dengan role tujuan
       ↓
 User download PDF hasil review
 ```
 
-Prompt ini memastikan setiap output AI bukan sekadar "review CV umum", melainkan **review CV berdasarkan tujuan karier user**, sesuai role, industri, dan level karier yang mereka input di form (`docs/input-form.md`).
+Aturan ini memastikan setiap hasil bukan sekadar "review CV umum", melainkan **review CV berdasarkan tujuan karier user** — sepenuhnya dijalankan di dalam tools, tanpa bergantung pada API AI eksternal apa pun.
