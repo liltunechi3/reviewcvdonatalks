@@ -15,7 +15,7 @@ Selain upload PDF CV, form **wajib** meminta user mengisi field berikut sebelum 
 | # | Field | Tipe | Wajib | Contoh Isian |
 |---|---|---|---|---|
 | 1 | **Nama Lengkap** | Text | Ya | Dona Arifah |
-| 2 | **Role yang Diinginkan** | Text / Select + "Lainnya" | Ya | Management Trainee, Digital Marketing Specialist, Social Media Specialist, Business Development, HR Staff, Finance Staff, dll. |
+| 2 | **Role yang Diinginkan** | Text / Select + "Lainnya" | Ya | Management Trainee, Digital Marketing Specialist, Social Media Specialist, Business Development, HR Staff, IT/Software Engineer, Data Analyst, UI/UX Designer, Product Manager, Project Manager, QA Engineer, Finance/Accounting Staff, Operations/Supply Chain, Customer Service, Admin/Office Support, Content Writer, Legal/Compliance, Procurement, Guru/Trainer, Tenaga Medis, Retail/Store Staff, Engineering (Civil/Mechanical/Electrical), Consultant, dll. Daftar lengkap kategori & keyword yang dipetakan ada di `docs/system-prompt.md`. |
 | 3 | **Industri yang Dituju** | Text / Select + "Lainnya" | Ya | FMCG, Property, Agency, Startup, Banking, Education, dll. |
 | 4 | **Level Karier** | Select | Ya | Fresh Graduate, Entry Level, Junior, Mid Level, Career Switcher |
 | 5 | **Bahasa CV yang Diinginkan** | Select | Ya | Indonesia / English |
