@@ -1,6 +1,6 @@
 # Spesifikasi Form Input — Review CV
 
-Dokumen ini mendefinisikan data yang harus dikumpulkan dari user **sebelum** CV diproses oleh Claude, supaya hasil revisi tidak generik dan selalu disesuaikan dengan tujuan karier user.
+Dokumen ini mendefinisikan data yang harus dikumpulkan dari user **sebelum** CV diproses oleh AI, supaya hasil revisi tidak generik dan selalu disesuaikan dengan tujuan karier user.
 
 ## 1. Upload CV
 
@@ -15,14 +15,14 @@ Selain upload PDF CV, form **wajib** meminta user mengisi field berikut sebelum 
 | # | Field | Tipe | Wajib | Contoh Isian |
 |---|---|---|---|---|
 | 1 | **Nama Lengkap** | Text | Ya | Dona Arifah |
-| 2 | **Role yang Diinginkan** | Text / Select + "Lainnya" | Ya | Management Trainee, Digital Marketing Specialist, Social Media Specialist, Business Development, HR Staff, Finance Staff, dll. |
+| 2 | **Role yang Diinginkan** | Text / Select + "Lainnya" | Ya | Management Trainee, Digital Marketing Specialist, Social Media Specialist, Business Development, HR Staff, IT/Software Engineer, Data Analyst, UI/UX Designer, Product Manager, Project Manager, QA Engineer, Finance/Accounting Staff, Operations/Supply Chain, Customer Service, Admin/Office Support, Content Writer, Legal/Compliance, Procurement, Guru/Trainer, Tenaga Medis, Retail/Store Staff, Engineering (Civil/Mechanical/Electrical), Consultant, dll. Daftar lengkap kategori & keyword yang dipetakan ada di `docs/system-prompt.md`. |
 | 3 | **Industri yang Dituju** | Text / Select + "Lainnya" | Ya | FMCG, Property, Agency, Startup, Banking, Education, dll. |
 | 4 | **Level Karier** | Select | Ya | Fresh Graduate, Entry Level, Junior, Mid Level, Career Switcher |
 | 5 | **Bahasa CV yang Diinginkan** | Select | Ya | Indonesia / English |
 
 ### Validasi
 
-- Form tidak bisa disubmit jika salah satu dari 5 field di atas kosong, kecuali user secara eksplisit memilih opsi "Skip / Role belum pasti" pada field **Role yang Diinginkan** — dalam kasus ini proses tetap lanjut, tapi backend menandai `role_specified: false` agar Claude menampilkan catatan bahwa revisi masih bersifat umum (lihat `docs/system-prompt.md`).
+- Form tidak bisa disubmit jika salah satu dari 5 field di atas kosong, kecuali user secara eksplisit memilih opsi "Skip / Role belum pasti" pada field **Role yang Diinginkan** — dalam kasus ini proses tetap lanjut, tapi backend menandai `role_specified: false` agar tools menampilkan catatan bahwa revisi masih bersifat umum (lihat `docs/review-rules.md`).
 - Field **Role yang Diinginkan** dan **Industri yang Dituju** sebaiknya berupa combobox (select + custom text) supaya konsisten tapi tetap fleksibel untuk role/industri yang tidak ada di daftar contoh.
 
 ## 3. Alur Aplikasi
@@ -32,9 +32,9 @@ Upload CV PDF
       ↓
 Isi target role (Nama, Role, Industri, Level Karier, Bahasa CV)
       ↓
-Claude membaca isi CV
+Tools mengekstrak & menganalisis isi CV
       ↓
-Claude menyesuaikan review dengan role tujuan
+Tools menyesuaikan review dengan role tujuan
       ↓
 Hasil review jadi lebih spesifik
       ↓
@@ -43,7 +43,7 @@ User download PDF hasil review
 
 ## 4. Payload ke Backend / Prompt
 
-Field-field ini dikirim bersama teks CV yang sudah diekstrak sebagai konteks untuk Claude (lihat `docs/system-prompt.md`, bagian "Input yang Diterima"):
+Field-field ini dikirim bersama teks CV yang sudah diekstrak sebagai input untuk mesin analisis rule-based (lihat `docs/review-rules.md`, bagian "Input yang Dipakai"):
 
 ```json
 {
